@@ -1,43 +1,107 @@
-function c(q) { console.dir(q)}
+function c(q) {
+  console.log(q);
+}
+const input = document.querySelector(".search__input");
+const cards = document.querySelector(".cards");
+const debouncedOnChangeInput = debounce(onChangeInput, 500);
 
+input.addEventListener("input", (e) => debouncedOnChangeInput(e));
+cards.addEventListener("click", onClickCards);
 
-
-function addCard(data) {
-  const cards = document.querySelector('.cards')
-  const tmpl = document.querySelector('#tmpl-card')
-  const card = tmpl.content.cloneNode(true)
-  const fieldName = card.querySelector('.card__name')
-  const fieldOwner = card.querySelector('.card__owner')
-  const fieldStars = card.querySelector('.card__stars')
-
-  fieldName.textContent = `Name: ${data}`
-  fieldOwner.textContent = `Owner: ${data}`
-  fieldStars.textContent = `Stars: ${data}`
-
-  cards.prepend(card)
-
+function onClickCards(e) {
+  if (e.target.classList.contains("card__delete")) {
+    e.target.closest(".card").remove();
+  }
 }
 
-function addDropdownRepo(name) {
-  const dropdown = document.querySelector('.dropdown')
-  const tmpl = document.querySelector('#dropdown-item')
-  const dropdownItem = tmpl.content.cloneNode(true)
-  
-  dropdownItem.querySelector('.dropdown__item').textContent = name
+function debounce(fn, debounceTime) {
+  let timeId;
 
-  dropdown.append(dropdownItem)
-
+  return function (...args) {
+    clearTimeout(timeId);
+    timeId = setTimeout(() => {
+      fn.apply(this, args);
+    }, debounceTime);
+  };
 }
 
+function onChangeInput(e) {
+  addDropdownRepos(e.target.value);
+}
 
-addCard('data')
-addCard('data2')
-addCard('data2')
-addCard('data2')
-addCard('data2')
+async function addDropdownRepos(value) {
+  const repos = await getRepos(value);
 
-addDropdownRepo('name')
-addDropdownRepo('name')
-addDropdownRepo('name')
-addDropdownRepo('name')
-addDropdownRepo('name')
+  deleteAllRepos();
+
+  for (let repo of repos) {
+    addDropdownItem(repo);
+  }
+}
+
+function addDropdownItem(repo) {
+  const dropdown = document.querySelector(".dropdown");
+  const tmpl = document.querySelector("#dropdown-item");
+  const clone = tmpl.content.cloneNode(true);
+  const dropdownItem = clone.querySelector(".dropdown__item");
+
+  dropdownItem.textContent = repo.name;
+  dropdownItem.addEventListener("click", (e) => addCard(repo));
+
+  dropdown.append(dropdownItem);
+}
+
+function deleteAllRepos() {
+  const repos = document.querySelectorAll(".dropdown__item");
+
+  for (let repo of repos) {
+    repo.remove();
+  }
+}
+
+function addCard(repo) {
+  const tmpl = document.querySelector("#tmpl-card");
+  const clone = tmpl.content.cloneNode(true);
+  const card = clone.querySelector(".card");
+  const fieldName = card.querySelector(".card__name");
+  const fieldOwner = card.querySelector(".card__owner");
+  const fieldStars = card.querySelector(".card__stars");
+
+  fieldName.textContent = `Name: ${repo.name}`;
+  fieldOwner.textContent = `Owner: ${repo.owner.login}`;
+  fieldStars.textContent = `Stars: ${repo.stargazers_count}`;
+
+  cards.prepend(card);
+  input.value = "";
+  deleteAllRepos();
+}
+
+function showError(text) {
+  const errMessage = document.querySelector(".error-message");
+  errMessage.textContent = text;
+  errMessage.classList.add("error-message--show");
+  setTimeout(() => errMessage.classList.remove("error-message--show"), 5000);
+}
+
+async function getRepos(word) {
+  let repos = [];
+  try {
+    if (word) {
+      const responce = await fetch(
+        `https://api.github.com/search/repositories?q=${word}&per_page=5`
+      );
+
+      const data = await responce.json();
+
+      if (responce.ok) {
+        repos = data.items;
+      } else {
+        throw new Error(data.message);
+      }
+    }
+  } catch (error) {
+    showError(error);
+  }
+
+  return repos;
+}

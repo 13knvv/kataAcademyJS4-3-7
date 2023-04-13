@@ -43,6 +43,7 @@ body {
 
 .dropdown {
   position: absolute;
+  z-index: 2;
   width: 100%;
   margin-top: 0;
   margin-bottom: 0;
@@ -54,9 +55,10 @@ body {
 .dropdown__item {
   font-size: 20px;
   padding: 7px 15px;
-  background-color: rgba(255, 255, 255, 0.79);
-  box-shadow: inset 0px 0px 5px 1px #c3c1c1;
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: inset 0px 0px 5px 1px #c3c1c1eb;
   cursor: pointer;
+  overflow: hidden;
 }
 
 .dropdown__item:hover {
@@ -95,4 +97,21 @@ body {
   align-self: start;
   width: 30px;
   cursor: pointer;
+}
+
+.error-message {
+  display: none;
+  position: fixed;
+  left: calc(50% - 100px);
+  top: 30%;
+  z-index: 10;
+  width: 200px;
+  padding: 20px;
+  background-color: #fff;
+  border: 2px solid red;
+  border-radius: 5px;
+}
+
+.error-message--show {
+  display: block;
 }
